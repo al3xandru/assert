@@ -8,6 +8,9 @@ IDEAS 💡 & TODOS ☑️
 
 - [ ] Introduce versioning
 - [ ] Investigate using https://pkg.go.dev/github.com/google/go-cmp/cmp 
+- [ ] Learn about Go module versioning
+  https://go.dev/doc/modules/version-numbers
+  https://go.dev/doc/modules/release-workflow
 
 FIELDNOTES 📝
 =============
