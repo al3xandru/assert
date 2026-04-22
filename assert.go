@@ -42,7 +42,6 @@ func areEqual[T any](a, b T) bool {
 
 	// slices of bytes
 	if aBytes, ok := any(a).([]byte); ok {
-		//fmt.Println("[]byte")
 		bBytes := any(b).([]byte)
 		return bytes.Equal(aBytes, bBytes)
 	}
@@ -100,10 +99,11 @@ func NotNil(tb testing.TB, got any, msgAndArgs ...any) {
 	}
 }
 
-// Error asserts got is an
-// If want is nil, this is equivalent to [AssertNil].
-// If want is a string, then the assertion compares the error messages.
-// If want is an error,
+// Error asserts the following cases:
+// 1. If want is nil, this is equivalent to [Nil].
+// 2. If want is a string, then the assertion compares the error messages.
+// 3. If want is an error, then the assertion is based on [errors.Is]
+// 4. If want is a type, then the assertion uses [errors.As]
 func Error(tb testing.TB, got error, want any) {
 	tb.Helper()
 
@@ -140,11 +140,12 @@ func Error(tb testing.TB, got error, want any) {
 	}
 }
 
+// True asserts got is true.
+// messageAndArgs accepts a formating string and arguments to be displayed if the assertion fails
 func True(tb testing.TB, got bool, messageAndArgs ...any) {
 	tb.Helper()
 	if !got {
 		msg := message(messageAndArgs...)
-		fmt.Println(msg)
 		if msg == "" {
 			tb.Errorf("got: false; want: true")
 		} else {
@@ -153,11 +154,12 @@ func True(tb testing.TB, got bool, messageAndArgs ...any) {
 	}
 }
 
+// False asserts got is false
+// messageAndArgs accepts a formating string and arguments to be displayed if the assertion fails
 func False(tb testing.TB, got bool, messageAndArgs ...any) {
 	tb.Helper()
 	if got {
 		msg := message(messageAndArgs...)
-		fmt.Println(msg)
 		if msg == "" {
 			tb.Errorf("got: true; want: false")
 		} else {
