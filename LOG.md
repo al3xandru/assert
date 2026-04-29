@@ -89,23 +89,20 @@ package assert   // ← still "assert", not "assertv2"
 
 #### 5. Tagging a Release
 
-If the module is defined at the root of the repository, the prefix is empty and the tag is just the version. However, in multi-module repositories, the prefix distinguishes versions for different modules — the prefix is the directory within the repository where the module is defined.
+If the module is defined at the root of the repository, the prefix is empty and the tag is just the version. 
+However, in multi-module repositories, the prefix distinguishes versions for different modules — the prefix is the directory within the repository where the module is defined.
 
 So for the **subdirectory strategy**, tags must be prefixed with the subdirectory name:
 
 ```bash
 # For v2/ subdirectory strategy:
-git tag v2/v2.0.0
-git push origin v2/v2.0.0
-
-# For branch strategy (v2 code is at repo root on a v2 branch):
 git tag v2.0.0
 git push origin v2.0.0
 ```
 
 ---
 
-## 6. Publishing to pkg.go.dev
+#### 6. Publishing to pkg.go.dev
 
 After pushing the tag, trigger indexing:
 
@@ -113,7 +110,12 @@ After pushing the tag, trigger indexing:
 GOPROXY=proxy.golang.org go list -m github.com/al3xandru/assert/v2@v2.0.0
 ```
 
-Once you've published the module, developers importing its packages will be able to resolve a dependency by running commands such as `go get`. Note: don't change a tagged version after publishing — Go tools authenticate a downloaded module against the first downloaded copy. Instead of changing previously published code, publish a new version.
+Use the command `GOPROXY=direct go list -m github.com/al3xandru/assert/v2@v2.0.0` to bypass the proxy.
+
+Once you've published the module, 
+developers importing its packages will be able to resolve a dependency by running commands such as `go get`. 
+Note: don't change a tagged version after publishing — Go tools authenticate a downloaded module against the first downloaded copy. 
+Instead of changing previously published code, publish a new version.
 
 ---
 

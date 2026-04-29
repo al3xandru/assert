@@ -23,27 +23,106 @@ func New(t testing.TB) assertions {
 }
 
 func (a assertions) Equal(got, want any) {
-	Equal(a.tb, got, want)
+	a.tb.Helper()
+
+	if isFunction(got) || isFunction(want) {
+		a.tb.Errorf("cannot compare func: got %#v want %#v", got, want)
+		return
+	}
+	if areEqual(got, want) {
+		return
+	}
+
+	errorMessage := fmt.Sprintf("got: %#v; want: %#v", got, want)
+	if len(errorMessage) > 80 {
+		a.tb.Errorf("not equal\ngot:\n%#v\nwant:\n%#v", got, want)
+	} else {
+		a.tb.Error(errorMessage)
+	}
 }
 
 func (a assertions) Error(got error, want any) {
-	Error(a.tb, got, want)
+	a.tb.Helper()
+
+	if want != nil && got == nil {
+		a.tb.Errorf("got: <nil>; want: %v", want)
+		return
+	}
+	if want == nil && got != nil {
+		a.tb.Fatalf("unexpected error: %v", got)
+		return
+	}
+
+	switch w := want.(type) {
+	case nil:
+		if got != nil {
+			a.tb.Fatalf("unexpected error: %v", got)
+			return
+		}
+	case error:
+		if !errors.Is(got, w) {
+			a.tb.Errorf("got: %T(%v); want: %T(%v)", got, got, w, want)
+		}
+	case string:
+		if !strings.Contains(got.Error(), w) {
+			a.tb.Errorf("got: %q; want: %q", got.Error(), w)
+		}
+	case reflect.Type:
+		target := reflect.New(w).Interface()
+		if !errors.As(got, target) {
+			a.tb.Errorf("got: %T; want: %s", got, w)
+		}
+	default:
+		a.tb.Errorf("unsupported want type: %T", want)
+	}
 }
 
 func (a assertions) Nil(got any, msgAndArgs ...any) {
-	Nil(a.tb, got, msgAndArgs...)
+	a.tb.Helper()
+	if !isNil(got) {
+		msg := message(msgAndArgs...)
+		if msg == "" {
+			a.tb.Errorf("got: %#v; want <nil>", got)
+		} else {
+			a.tb.Errorf("got: %#v; want <nil>\n%s\n", got, msg)
+		}
+	}
 }
 
 func (a assertions) NotNil(got any, msgAndArgs ...any) {
-	NotNil(a.tb, got, msgAndArgs...)
+	a.tb.Helper()
+	if isNil(got) {
+		msg := message(msgAndArgs...)
+		if msg == "" {
+			a.tb.Errorf("got: <nil>; want non-nil")
+		} else {
+			a.tb.Errorf("got: <nil>; want non-nil\n%s\n", msg)
+		}
+	}
 }
 
 func (a assertions) True(got bool, msgAndArgs ...any) {
-	True(a.tb, got, msgAndArgs...)
+	a.tb.Helper()
+	if !got {
+		msg := message(msgAndArgs...)
+		if msg == "" {
+			a.tb.Errorf("got: false; want: true")
+		} else {
+			a.tb.Errorf("got: false; want: true\n%s\n", msg)
+		}
+	}
 }
 
 func (a assertions) False(got bool, msgAndArgs ...any) {
-	False(a.tb, got, msgAndArgs...)
+	a.tb.Helper()
+	if got {
+		msg := message(msgAndArgs...)
+		if msg == "" {
+			a.tb.Errorf("got: true; want: false")
+		} else {
+			a.tb.Errorf("got: true; want: false\n%s\n", msg)
+		}
+	}
 }
 
 // Equal asserts that got is equal to want
